@@ -1,7 +1,9 @@
 {
   "name": "FAST ZONE - Student & Admin Portal",
   "short_name": "FAST ZONE",
-  "start_url": "/index.html",
+  "description": "FAST ZONE Student and Admin Learning Portal",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1a73e8",
