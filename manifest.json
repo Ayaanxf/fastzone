@@ -10,12 +10,10 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://ibb.co/Z11YcPT1",
+      "src": "./icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }
   ]
 }
-
-
