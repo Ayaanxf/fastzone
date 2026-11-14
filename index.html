@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAST ZONE - Student & Admin Portal</title>
+  
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%231A73E8'/><text x='50%' y='65%' font-family='Arial, sans-serif' font-weight='900' font-size='50' fill='%23FFFFFF' text-anchor='middle'>FZ</text></svg>">
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0" rel="stylesheet">
+  
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --md-sys-color-primary: #1A73E8;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #D2E3FC;
+      --md-sys-color-on-primary-container: #041E49;
+      --md-sys-color-surface: #F8F9FA;
+      --md-sys-color-on-surface: #1F1F1F;
+      --md-sys-color-surface-variant: #E1E3E1;
+      --md-sys-color-outline: #747775;
+      --md-sys-color-card: #FFFFFF;
+      --md-sys-color-error: #B00020;
+      --md-sys-color-success: #137333;
+      --md-radius-lg: 28px;
+      --md-radius-md: 16px;
+      --md-radius-sm: 12px;
+    }
+
+    [data-theme="purple"] {
+      --md-sys-color-primary: #6750A4;
+      --md-sys-color-primary-container: #EADDFF;
+      --md-sys-color-on-primary-container: #21005D;
+    }
+
+    [data-theme="emerald"] {
+      --md-sys-color-primary: #0F5257;
+      --md-sys-color-primary-container: #B5E2FA;
+      --md-sys-color-on-primary-container: #001F24;
+    }
+
+    [data-theme="orange"] {
+      --md-sys-color-primary: #E65100;
+      --md-sys-color-primary-container: #FFE0B2;
+      --md-sys-color-on-primary-container: #E65100;
+    }
+
+    [data-theme="brown"] {
+      --md-sys-color-primary: #5D4037;
+      --md-sys-color-primary-container: #D7CCC8;
+      --md-sys-color-on-primary-container: #3E2723;
+    }
+
+    [data-theme="dark"] {
+      --md-sys-color-primary: #8AB4F8;
+      --md-sys-color-on-primary: #041E49;
+      --md-sys-color-primary-container: #004A77;
+      --md-sys-color-on-primary-container: #D2E3FC;
+      --md-sys-color-surface: #121212;
+      --md-sys-color-on-surface: #E3E3E3;
+      --md-sys-color-surface-variant: #2D2D2D;
+      --md-sys-color-card: #1E1E1E;
+      --md-sys-color-outline: #8E918F;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Google Sans', 'Roboto', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+
+    @keyframes flyInZoomOut {
+      0% { opacity: 0; transform: scale(1.03) translateY(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .fly-in-animation { animation: flyInZoomOut 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+    #loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.2s ease; }
+    #loading-overlay.hidden { opacity: 0; pointer-events: none; display: none; }
+    .md3-spinner { width: 48px; height: 48px; border: 4px solid var(--md-sys-color-primary-container); border-top: 4px solid var(--md-sys-color-primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    header.app-header { position: sticky; top: 0; z-index: 50; background: var(--md-sys-color-card); border-bottom: 1px solid var(--md-sys-color-surface-variant); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+    
+    .brand-logo-badge { width: 34px; height: 34px; background: var(--md-sys-color-primary); color: #FFFFFF; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; }
+    .brand-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.3rem; color: var(--md-sys-color-primary); }
+    
+    .header-actions { display: flex; align-items: center; gap: 8px; position: relative; }
+    .icon-btn { background: transparent; border: none; color: var(--md-sys-color-on-surface); cursor: pointer; padding: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; transition: background 0.2s; }
+    .icon-btn:hover { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary); }
+
+    .notification-badge { position: absolute; top: 4px; right: 4px; background: var(--md-sys-color-error); color: #FFF; font-size: 0.65rem; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+    .dropdown-menu { position: absolute; top: 58px; right: 16px; background: var(--md-sys-color-card); border: 1px solid var(--md-sys-color-surface-variant); border-radius: var(--md-radius-md); box-shadow: 0 8px 24px rgba(0,0,0,0.12); width: 300px; z-index: 100; display: none; overflow: hidden; }
+    .dropdown-menu.active { display: block; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .profile-summary-box { padding: 16px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); border-bottom: 1px solid var(--md-sys-color-surface-variant); display: flex; align-items: center; gap: 12px; }
+    .avatar-sm { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; flex-shrink: 0; }
+    .dropdown-item { padding: 12px 16px; display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 500; color: var(--md-sys-color-on-surface); cursor: pointer; border: none; background: transparent; width: 100%; text-align: left; transition: background 0.2s; }
+    .dropdown-item:hover { background: var(--md-sys-color-surface-variant); }
+
+    body.mobile-mode nav.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 72px; background: var(--md-sys-color-card); border-top: 1px solid var(--md-sys-color-surface-variant); display: flex; justify-content: flex-start; align-items: center; padding-left: 10px; gap: 8px; z-index: 50; }
+    body.mobile-mode nav.bottom-nav .nav-item { flex: 0 0 auto; padding: 0 12px; }
+
+    body.desktop-mode { display: flex; flex-direction: row; }
+    body.desktop-mode .app-sidebar { width: 260px; background: var(--md-sys-color-card); border-right: 1px solid var(--md-sys-color-surface-variant); position: fixed; top: 0; bottom: 0; left: 0; z-index: 60; display: flex; flex-direction: column; padding: 20px 12px; }
+    body.desktop-mode header.app-header { display: none !important; }
+    body.desktop-mode main.main-content { margin-left: 260px; flex: 1; padding: 30px; max-width: 1200px; }
+    body.desktop-mode nav.bottom-nav { display: none !important; }
+    body.desktop-mode .fab-btn { bottom: 30px; right: 30px; }
+
+    .sidebar-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.4rem; color: var(--md-sys-color-primary); padding: 10px 12px; margin-bottom: 24px; }
+    .sidebar-nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: var(--md-radius-md); color: var(--md-sys-color-on-surface); font-weight: 600; text-decoration: none; cursor: pointer; transition: background 0.2s; margin-bottom: 4px; }
+    .sidebar-nav-item:hover { background: var(--md-sys-color-surface-variant); }
+    .sidebar-nav-item.active { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary); }
+
+    main.main-content { flex: 1; padding-bottom: 90px; }
+    .container { width: 100%; max-width: 900px; margin: 0 auto; padding: 20px; }
+    .card { background: var(--md-sys-color-card); border: 1px solid var(--md-sys-color-surface-variant); border-radius: var(--md-radius-md); padding: 22px; margin-bottom: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--md-sys-color-outline); margin-bottom: 6px; }
+    input, select, textarea { width: 100%; padding: 14px 16px; border-radius: var(--md-radius-sm); border: 1px solid var(--md-sys-color-outline); background: var(--md-sys-color-card); color: var(--md-sys-color-on-surface); font-size: 0.95rem; outline: none; transition: all 0.2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--md-sys-color-primary); box-shadow: 0 0 0 2px var(--md-sys-color-primary-container); }
+    
+    .btn { width: 100%; padding: 14px; border: none; border-radius: var(--md-radius-lg); background-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); font-weight: 600; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn-outline { background: transparent; border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface); }
+    .btn-danger { background: var(--md-sys-color-error); color: #FFF; }
+    .btn-sm { padding: 8px 16px; font-size: 0.85rem; width: auto; border-radius: 20px; }
+
+    nav.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 72px; background: var(--md-sys-color-card); border-top: 1px solid var(--md-sys-color-surface-variant); display: flex; justify-content: flex-start; align-items: center; padding-left: 10px; gap: 8px; z-index: 50; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--md-sys-color-outline); text-decoration: none; font-size: 0.75rem; font-weight: 600; gap: 4px; cursor: pointer; flex: 0 0 auto; padding: 0 12px; height: 100%; position: relative; }
+    .nav-item span.material-symbols-outlined { font-size: 24px; padding: 4px 16px; border-radius: 16px; transition: background 0.2s; }
+    .nav-item.active span.material-symbols-outlined { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary); }
+    .nav-item.active { color: var(--md-sys-color-primary); }
+
+    .fab-btn { position: fixed; bottom: 85px; right: 20px; width: 56px; height: 56px; border-radius: 16px; background: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary); border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 90; transition: transform 0.3s ease, background 0.3s; }
+    .fab-btn span { font-size: 28px; }
+    .fab-btn.active { transform: rotate(135deg); background: var(--md-sys-color-error); color: #FFF; }
+
+    .m3-switch { position: relative; display: inline-block; width: 52px; height: 32px; flex-shrink: 0; }
+    .m3-switch input { opacity: 0; width: 0; height: 0; }
+    .m3-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--md-sys-color-surface-variant); border: 2px solid var(--md-sys-color-outline); border-radius: 32px; transition: .3s; }
+    .m3-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 5px; bottom: 5px; background-color: var(--md-sys-color-outline); border-radius: 50%; transition: .3s; }
+    .m3-switch input:checked + .m3-slider { background-color: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); }
+    .m3-switch input:checked + .m3-slider:before { transform: translateX(20px); background-color: var(--md-sys-color-on-primary); }
+
+    .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+    .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+    .modal-box { background: var(--md-sys-color-card); color: var(--md-sys-color-on-surface); border-radius: var(--md-radius-lg); width: 92%; max-width: 560px; max-height: 85vh; overflow-y: auto; padding: 26px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: scaleUp 0.25s ease; }
+    @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .hidden { display: none !important; }
+
+    .auth-wrapper { max-width: 440px; margin: 40px auto; }
+    .tab-group { display: flex; background: var(--md-sys-color-surface-variant); padding: 5px; border-radius: var(--md-radius-lg); margin-bottom: 22px; }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--md-sys-color-outline); font-weight: 600; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { background: var(--md-sys-color-card); color: var(--md-sys-color-primary); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    
+    .chat-container { display: flex; flex-direction: column; height: calc(100vh - 200px); }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 70px; }
+    .chat-bubble { max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 0.925rem; line-height: 1.4; word-break: break-word; position: relative; }
+    .chat-bubble.my-msg { align-self: flex-end; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); border-bottom-right-radius: 4px; }
+    .chat-bubble.other-msg { align-self: flex-start; background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface); border-bottom-left-radius: 4px; }
+    
+    .chat-input-bar { position: fixed; bottom: 72px; left: 0; right: 0; background: var(--md-sys-color-card); padding: 12px 20px; border-top: 1px solid var(--md-sys-color-surface-variant); display: flex; align-items: center; gap: 12px; z-index: 40; }
+    body.desktop-mode .chat-input-bar { left: 260px; bottom: 0; }
+
+    .reels-feed { display: flex; flex-direction: column; gap: 24px; max-width: 480px; margin: 0 auto; }
+    .reel-card { background: #000000; color: #FFFFFF; border-radius: var(--md-radius-lg); overflow: hidden; position: relative; height: 550px; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .reel-video { width: 100%; height: 100%; object-fit: cover; }
+    .reel-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(transparent, rgba(0,0,0,0.9)); display: flex; justify-content: space-between; align-items: flex-end; }
+    .reel-actions { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+    .reel-btn { background: rgba(255,255,255,0.25); backdrop-filter: blur(4px); border: none; color: #FFF; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .reel-btn.liked { color: #EF4444; }
+    .reel-btn.saved { color: #F59E0B; }
+
+    .m3-dialog-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+    .m3-dialog-backdrop.active { opacity: 1; pointer-events: auto; }
+    .m3-dialog-box { background: var(--md-sys-color-card); color: var(--md-sys-color-on-surface); border-radius: var(--md-radius-lg); width: 88%; max-width: 400px; padding: 24px; box-shadow: 0 12px 32px rgba(0,0,0,0.25); text-align: center; }
+
+    .passcode-dots-container { display: flex; justify-content: center; gap: 12px; margin: 20px 0; }
+    .passcode-box { width: 56px; height: 56px; border: 2px solid var(--md-sys-color-outline); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); }
+  </style>
+</head>
+<body class="mobile-mode">
+
+  <!-- MD3 Global Loading Overlay -->
+  <div id="loading-overlay" class="hidden">
+    <div class="md3-spinner"></div>
+    <div style="font-weight: 600; font-size: 0.95rem; color: #FFF;">Loading from Portal...</div>
+  </div>
+
+  <!-- Desktop Sidebar Navigation (Hidden before login) -->
+  <aside id="desktop-sidebar" class="app-sidebar hidden">
+    <div class="sidebar-brand">
+      <div class="brand-logo-badge">FZ</div>
+      <span>FAST ZONE</span>
+    </div>
+    <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+      <a class="sidebar-nav-item active" id="side-home" onclick="switchMainTab('home')"><span class="material-symbols-outlined">home</span> Home</a>
+      <a class="sidebar-nav-item" id="side-updates" onclick="switchMainTab('updates')"><span class="material-symbols-outlined">grid_view</span> Updates</a>
+      <a class="sidebar-nav-item" id="side-chat" onclick="switchMainTab('chat')"><span class="material-symbols-outlined">forum</span> Chat</a>
+      <a class="sidebar-nav-item" id="side-reels" onclick="switchMainTab('reels')"><span class="material-symbols-outlined">movie</span> Reels</a>
+    </div>
+    <div style="border-top:1px solid var(--md-sys-color-surface-variant); padding-top:14px; display:flex; flex-direction:column; gap:8px;">
+      <a class="sidebar-nav-item" onclick="handleLogout()" style="color:var(--md-sys-color-error);"><span class="material-symbols-outlined">logout</span> Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- App Header (Mobile) -->
+  <header class="app-header fly-in-animation">
+    <div class="brand-logo">
+      <div class="brand-logo-badge">FZ</div>
+      <span>FAST ZONE</span>
+    </div>
+    <div class="header-actions">
+      <!-- Live Notifications Bell Button -->
+      <button id="header-notif-btn" class="icon-btn hidden" onclick="openNotificationsDropdown()" title="Notifications">
+        <span class="material-symbols-outlined">notifications</span>
+        <span id="notif-badge-count" class="notification-badge hidden">0</span>
+      </button>
+
+      <button class="icon-btn" onclick="toggleDropdownMenu()" title="Menu">
+        <span class="material-symbols-outlined">more_vert</span>
+      </button>
+    </div>
+
+    <!-- Notifications Dropdown -->
+    <div id="notifications-dropdown" class="dropdown-menu" style="right: 50px; width: 320px;">
+      <div style="padding: 14px 16px; font-weight: 700; border-bottom: 1px solid var(--md-sys-color-surface-variant); display:flex; justify-content:space-between; align-items:center;">
+        <span>Live Notifications</span>
+        <span style="font-size:0.75rem; color:var(--md-sys-color-primary); cursor:pointer;" onclick="clearAllNotifications()">Clear All</span>
+      </div>
+      <div id="notifications-list-container" style="max-height: 300px; overflow-y: auto;">
+        <div style="padding: 16px; text-align:center; color:var(--md-sys-color-outline); font-size:0.85rem;">No new notifications</div>
+      </div>
+    </div>
+
+    <!-- Main Dropdown Menu (3-Dot Settings) -->
+    <div id="dropdown-menu" class="dropdown-menu">
+      <div id="logged-in-menu-section" class="hidden">
+        <div class="profile-summary-box">
+          <img id="menu-avatar-img" src="" class="avatar-sm hidden" alt="Avatar">
+          <div id="menu-avatar-fallback" class="avatar-sm">A</div>
+          <div style="overflow:hidden;">
+            <div id="menu-name" style="font-weight:700; font-size:0.95rem;">Main Admin</div>
+            <div id="menu-roll-no" style="font-size:0.75rem; color:var(--md-sys-color-outline);">Roll: 26HC111</div>
+            <div id="menu-role-badge" style="font-size:0.75rem; font-weight:700; color:var(--md-sys-color-primary); margin-top:2px;">ADMIN</div>
+          </div>
+        </div>
+        <button class="dropdown-item" onclick="openMyAccountModal()"><span class="material-symbols-outlined">manage_accounts</span> Manage My Account</button>
+        <button class="dropdown-item" onclick="openReportModal()"><span class="material-symbols-outlined">report_problem</span> Report / Feedback</button>
+        <button class="dropdown-item" onclick="openAdminInfoModal()"><span class="material-symbols-outlined">info</span> Admin & Contact Info</button>
+        <div id="admin-menu-item" class="dropdown-item hidden" onclick="openAdminPortalModal()"><span class="material-symbols-outlined">admin_panel_settings</span> Admin Dashboard</div>
+      </div>
+      <button class="dropdown-item" onclick="openAppearanceModal()"><span class="material-symbols-outlined">palette</span> Appearance & Themes</button>
+      <button id="menu-signout-btn" class="dropdown-item hidden" onclick="handleLogout()" style="color:var(--md-sys-color-error); border-top:1px solid var(--md-sys-color-surface-variant);"><span class="material-symbols-outlined">logout</span> Sign Out</button>
+    </div>
+  </header>
+
+  <!-- Floating Action Button (+) -->
+  <button id="fab-post-btn" class="fab-btn hidden" onclick="toggleFabAnnouncementModal()" title="Add Update">
+    <span class="material-symbols-outlined">add</span>
+  </button>
+
+  <main class="main-content">
+    <!-- Auth View -->
+    <div id="view-auth" class="container auth-wrapper fly-in-animation">
+      <div class="card" style="padding: 28px;">
+        <h2 style="text-align: center; margin-bottom: 24px; font-weight: 800; color: var(--md-sys-color-primary);">FAST ZONE PORTAL</h2>
+        <div class="tab-group">
+          <button class="tab-btn active" id="btn-tab-login" onclick="switchAuthTab('login')">Login</button>
+          <button class="tab-btn" id="btn-tab-reg" onclick="switchAuthTab('register')">Register</button>
+        </div>
+
+        <div id="form-login">
+          <div class="form-group"><label>Username or Email</label><input type="text" id="login-user" placeholder="Enter username or email" onkeydown="if(event.key==='Enter') handleLogin()"></div>
+          <div class="form-group"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') handleLogin()"></div>
+          <div style="text-align: right; margin-bottom: 14px;">
+            <a href="#" onclick="openForgotPasswordModal()" style="font-size: 0.85rem; color: var(--md-sys-color-primary); font-weight: 600; text-decoration: none;">Forgot Password?</a>
+          </div>
+          <button class="btn" id="login-btn" onclick="handleLogin()">Login</button>
+        </div>
+
+        <div id="form-register" class="hidden">
+          <div class="form-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="John Doe"></div>
+          <div class="form-group"><label>Class</label><input type="text" id="reg-class" placeholder="BSCS-2A"></div>
+          <div class="form-group"><label>Roll Number</label><input type="text" id="reg-roll" placeholder="26HC111"></div>
+          <div class="form-group"><label>Date of Birth</label><input type="date" id="reg-dob"></div>
+          <div class="form-group"><label>Phone Number</label><input type="tel" id="reg-phone" placeholder="03001234567"></div>
+          <div class="form-group"><label>Username</label><input type="text" id="reg-username" placeholder="johndoe"></div>
+          <div class="form-group"><label>Email Address</label><input type="email" id="reg-email" placeholder="john@example.com"></div>
+          <div class="form-group"><label>Password</label><input type="password" id="reg-pass" placeholder="••••••••"></div>
+          <div class="form-group"><label>Profile Picture (Optional)</label><input type="file" id="reg-avatar-file" accept="image/*"></div>
+          <button class="btn" onclick="handleRegister()" style="margin-top: 6px;">Register Account</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Home Tab -->
+    <div id="tab-content-home" class="container hidden fly-in-animation">
+      <div id="admin-warning-banner-container"></div>
+      
+      <div class="card">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-sys-color-primary);">push_pin</span> Portal Announcements (Pinned)
+        </h3>
+        <div id="home-pinned-announcements-list"></div>
+      </div>
+
+      <div class="card" style="background: linear-gradient(135deg, var(--md-sys-color-primary), #0D47A1); color: #FFF; border: none;">
+        <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 6px;">AI Assistant Quick Links</h3>
+        <p style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 16px;">Instant access to top AI intelligence models for study support.</p>
+        <div id="quick-links-container" style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <a href="https://chatgpt.com" target="_blank" class="btn btn-sm" style="background: #FFFFFF; color: #000; font-weight: 600; text-decoration:none;">ChatGPT</a>
+          <a href="https://gemini.google.com" target="_blank" class="btn btn-sm" style="background: #FFFFFF; color: var(--md-sys-color-primary); font-weight: 600; text-decoration:none;">Gemini AI</a>
+        </div>
+        <div id="admin-quick-link-edit" class="hidden" style="margin-top:14px; border-top:1px solid rgba(255,255,255,0.2); padding-top:12px;">
+          <p style="font-size:0.8rem; font-weight:700; margin-bottom:6px;">Admin / Vice Admin: Add Button Name & Link</p>
+          <div style="display:flex; gap:8px; margin-bottom:8px;">
+            <input type="text" id="ql-name" placeholder="Button Name" style="padding:8px; font-size:0.85rem; color:#000; background:#FFF;">
+            <input type="url" id="ql-url" placeholder="https://www.google.com" style="padding:8px; font-size:0.85rem; color:#000; background:#FFF;">
+          </div>
+          <button class="btn btn-sm" style="background:#FFF; color:#000;" onclick="addQuickLink()">Add Custom Link</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--md-sys-color-success);">lightbulb</span> Portal Suggestions
+        </h3>
+        <div id="admin-suggestion-input-box" class="hidden" style="margin-bottom: 16px;">
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="input-home-suggestion" placeholder="Add official suggestion..." style="margin-bottom:0;">
+            <button class="btn btn-sm" onclick="postHomeSuggestion()">Post</button>
+          </div>
+        </div>
+        <div id="home-suggestions-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+      </div>
+    </div>
+
+    <!-- Updates Tab -->
+    <div id="tab-content-updates" class="container hidden fly-in-animation">
+      <h3 style="font-weight:700; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+        <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">grid_view</span> All Updates & Announcements
+      </h3>
+      <div id="updates-wall-feed" style="display:flex; flex-direction:column; gap:16px;"></div>
+    </div>
+
+    <!-- Chat Tab -->
+    <div id="tab-content-chat" class="container hidden fly-in-animation">
+      <div class="card chat-container"><div id="chat-messages" class="chat-messages"></div></div>
+      <div id="chat-input-bar" class="chat-input-bar hidden">
+        <input type="file" id="chat-file-input" accept="image/*,video/*,.pdf,.doc,.docx" style="display:none;" onchange="sendChatMedia(this)">
+        <button class="icon-btn" onclick="document.getElementById('chat-file-input').click()" style="color:var(--md-sys-color-primary);"><span class="material-symbols-outlined">attach_file</span></button>
+        <input type="text" id="chat-text-input" placeholder="Type a message..." style="flex:1;" onkeydown="if(event.key==='Enter') sendChatMessage()">
+        <button class="btn btn-sm" onclick="sendChatMessage()" style="border-radius: 50%; width: 44px; height: 44px; padding: 0;"><span class="material-symbols-outlined">send</span></button>
+      </div>
+    </div>
+
+    <!-- Reels Tab -->
+    <div id="tab-content-reels" class="container hidden fly-in-animation">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div class="tab-group" style="margin-bottom:0; flex:1; max-width:280px;">
+          <button class="tab-btn active" id="reel-tab-all" onclick="switchReelCategory('all')">All Reels</button>
+          <button class="tab-btn" id="reel-tab-my" onclick="switchReelCategory('my')">My Reels</button>
+          <button class="tab-btn" id="reel-tab-saved" onclick="switchReelCategory('saved')">Saved</button>
+        </div>
+        <button class="btn btn-sm" onclick="openAddReelModal()"><span class="material-symbols-outlined">add_circle</span> Add Reel</button>
+      </div>
+      <div id="reels-feed-container" class="reels-feed"></div>
+    </div>
+  </main>
+
+  <!-- Mobile Navigation Bar (Hidden before login) -->
+  <nav id="bottom-nav" class="bottom-nav hidden">
+    <div class="nav-item active" id="nav-home" onclick="switchMainTab('home')"><span class="material-symbols-outlined">home</span> Home</div>
+    <div class="nav-item" id="nav-updates" onclick="switchMainTab('updates')"><span class="material-symbols-outlined">grid_view</span> Updates</div>
+    <div class="nav-item" id="nav-chat" onclick="switchMainTab('chat')"><span class="material-symbols-outlined">forum</span> Chat</div>
+    <div class="nav-item" id="nav-reels" onclick="switchMainTab('reels')"><span class="material-symbols-outlined">movie</span> Reels</div>
+  </nav>
+
+  <!-- MODALS -->
+
+  <!-- Add Reel Modal -->
+  <div id="modal-add-reel" class="modal-backdrop">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-weight:700;">Post New Reel</h3>
+        <button class="icon-btn" onclick="closeModal('modal-add-reel')"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="form-group"><label>Select Video / Photo</label><input type="file" id="reel-file" accept="video/*,image/*"></div>
+      <div class="form-group"><label>Caption</label><input type="text" id="reel-caption" placeholder="Caption..."></div>
+      <button class="btn" onclick="publishNewReel()">Post Reel</button>
+    </div>
+  </div>
+
+  <!-- Admin Post Announcement / Update Modal (With Word-Style Formatting Toolbar & Multiple Screenshots Upload) -->
+  <div id="modal-post-announcement" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 650px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-weight:700;">Post Announcement / Update & Screenshots</h3>
+        <button class="icon-btn" onclick="toggleFabAnnouncementModal()"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="form-group"><label>Title</label><input type="text" id="post-title" placeholder="Announcement title"></div>
+      
+      <!-- Word Style Formatting Toolbar -->
+      <div style="background:var(--md-sys-color-surface-variant); padding:8px 12px; border-radius:8px 8px 0 0; display:flex; gap:6px; flex-wrap:wrap; align-items:center; border:1px solid var(--md-sys-color-outline); border-bottom:none;">
+        <button type="button" class="btn btn-sm" style="padding:4px 10px; background:var(--md-sys-color-card); color:var(--md-sys-color-on-surface); font-weight:700;" onclick="formatTextCmd('bold')" title="Bold">B</button>
+        <button type="button" class="btn btn-sm" style="padding:4px 10px; background:var(--md-sys-color-card); color:var(--md-sys-color-on-surface); font-style:italic;" onclick="formatTextCmd('italic')" title="Italic">I</button>
+        <button type="button" class="btn btn-sm" style="padding:4px 10px; background:var(--md-sys-color-card); color:var(--md-sys-color-on-surface); text-decoration:underline;" onclick="formatTextCmd('underline')" title="Underline">U</button>
+        <select onchange="formatBlockCmd(this.value)" style="padding:4px 8px; width:auto; font-size:0.8rem; background:var(--md-sys-color-card); color:var(--md-sys-color-on-surface);">
+          <option value="p">Normal Text</option>
+          <option value="h3">Heading</option>
+          <option value="blockquote">Quote</option>
+        </select>
+        <button type="button" class="btn btn-sm" style="padding:4px 10px; background:var(--md-sys-color-card); color:var(--md-sys-color-on-surface);" onclick="formatTextCmd('insertUnorderedList')" title="Bullet List">• List</button>
+        <button type="button" class="btn btn-sm" style="padding:4px 10px; background:var(--md-sys-color-card); color:var(--md-sys-color-on-surface);" onclick="formatTextCmd('justifyLeft')" title="Align Left">Left</button>
+        <button type="button" class="btn btn-sm" style="padding:4px 10px; background:var(--md-sys-color-card); color:var(--md-sys-color-on-surface);" onclick="formatTextCmd('justifyCenter')" title="Align Center">Center</button>
+      </div>
+      <!-- Rich Content Editable Area -->
+      <div id="post-desc-editor" contenteditable="true" style="min-height: 120px; max-height: 220px; overflow-y: auto; padding: 12px; border: 1px solid var(--md-sys-color-outline); border-radius: 0 0 8px 8px; background: var(--md-sys-color-card); color: var(--md-sys-color-on-surface); font-size: 0.95rem; outline: none; margin-bottom: 16px;" placeholder="Enter full details with formatting..."></div>
+
+      <div class="form-group">
+        <label>Attach Screenshots (Up to 3 Screenshots)</label>
+        <input type="file" id="post-files" accept="image/*" multiple onchange="handleScreenshotsSelection(this)">
+        <div id="screenshots-preview-container" style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"></div>
+      </div>
+
+      <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+        <input type="checkbox" id="post-is-pinned" style="width:20px; height:20px;">
+        <label for="post-is-pinned" style="margin-bottom:0; cursor:pointer;">📌 Pin this announcement to Home Page</label>
+      </div>
+      <button class="btn" onclick="publishAdminAnnouncement()">Publish Announcement</button>
+    </div>
+  </div>
+
+  <!-- Forgot Password Modal -->
+  <div id="modal-forgot-password" class="modal-backdrop">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-weight:700;">Recover Password</h3>
+        <button class="icon-btn" onclick="closeModal('modal-forgot-password')"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div id="forgot-step-1">
+        <div class="form-group"><label>Roll Number</label><input type="text" id="fp-roll" placeholder="26HC111"></div>
+        <div class="form-group"><label>Date of Birth</label><input type="date" id="fp-dob"></div>
+        <button class="btn" onclick="verifyForgotPasswordData()">Verify & Get Credentials</button>
+      </div>
+      <div id="forgot-step-2" class="hidden">
+        <div style="background:var(--md-sys-color-primary-container); padding:16px; border-radius:12px; margin-bottom:16px;">
+          <p style="font-weight:700; color:var(--md-sys-color-primary); margin-bottom:4px;">Username: <span id="fp-res-user" style="font-weight:400;"></span></p>
+          <p style="font-weight:700; color:var(--md-sys-color-primary);">Current Password: <span id="fp-res-pass" style="font-weight:400;"></span></p>
+        </div>
+        <div class="form-group"><label>Change New Password</label><input type="password" id="fp-new-pass" placeholder="Enter new password"></div>
+        <button class="btn" onclick="saveNewPasswordFromForgot()">Update Password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Material Design 3 Custom Popup Modal -->
+  <div id="m3-custom-popup" class="m3-dialog-backdrop">
+    <div class="m3-dialog-box">
+      <h3 id="m3-popup-title" style="font-weight:700; color:var(--md-sys-color-primary); margin-bottom:10px;">Notice</h3>
+      <p id="m3-popup-message" style="font-size:0.95rem; margin-bottom:20px;"></p>
+      <div id="m3-popup-buttons" style="display:flex; gap:10px; justify-content:center;">
+        <button class="btn btn-sm" onclick="closeM3Popup()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Appearance / Theme Selector Modal -->
+  <div id="modal-appearance" class="modal-backdrop">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-weight:700;">Appearance & Dynamic Color Themes</h3>
+        <button class="icon-btn" onclick="closeModal('modal-appearance')"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="form-group">
+        <label>Color Scheme</label>
+        <select id="theme-color-select">
+          <option value="default">Google Blue</option>
+          <option value="purple">Royal Purple</option>
+          <option value="emerald">Emerald Green</option>
+          <option value="orange">Dynamic Orange</option>
+          <option value="brown">Earth Brown</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Display Mode</label>
+        <select id="theme-mode-select">
+          <option value="light">Light Mode</option>
+          <option value="dark">Dark Mode</option>
+        </select>
+      </div>
+      <button class="btn" onclick="saveAndApplyThemeSettings()">Save Settings</button>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard Modal -->
+  <div id="modal-admin-portal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 860px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-weight:700; color:var(--md-sys-color-primary); display:flex; align-items:center; gap:8px;">
+          <span class="material-symbols-outlined" style="color:var(--md-sys-color-on-surface);">admin_panel_settings</span> Admin Dashboard
+        </h3>
+        <button class="icon-btn" onclick="closeModal('modal-admin-portal')"><span class="material-symbols-outlined">close</span></button>
+      </div>
+
+      <div class="card" style="padding:16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; background:var(--md-sys-color-primary-container);">
+        <div>
+          <strong style="font-size:0.95rem;">Require Admin Approval for Registration</strong>
+          <p style="font-size:0.8rem; opacity:0.8;">If ON, new registrations must be accepted by admin.</p>
+        </div>
+        <label class="m3-switch">
+          <input type="checkbox" id="approval-toggle" onchange="toggleRegistrationApproval(this.checked)">
+          <span class="m3-slider"></span>
+        </label>
+      </div>
+
+      <div class="card" style="padding:16px; margin-bottom:18px;">
+        <h4 style="font-weight:700; margin-bottom:10px;">Admin Warning Banner & Popup (Red on Home)</h4>
+        <input type="text" id="warn-title" placeholder="Warning Title" style="margin-bottom:8px;">
+        <textarea id="warn-details" placeholder="Warning Details..." rows="2" style="margin-bottom:8px;"></textarea>
+        
+        <div class="form-group" style="margin-bottom:10px;">
+          <label>Target Audience</label>
+          <select id="warn-target" onchange="toggleWarnUserSelect(this.value)">
+            <option value="everyone">Everyone</option>
+            <option value="specific">Only One Specific User</option>
+          </select>
+        </div>
+        <div class="form-group hidden" id="warn-user-select-group">
+          <label>Select User</label>
+          <select id="warn-target-uid"></select>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-sm" onclick="setAdminWarning()">Publish Warning & Popup</button>
+          <button class="btn btn-sm btn-danger" onclick="removeAdminWarning()">Remove Warning</button>
+        </div>
+      </div>
+      
+      <div class="tab-group" style="margin-bottom:18px;">
+        <button class="tab-btn active" id="admin-tab-users" onclick="switchAdminTab('users')">Registered Users</button>
+        <button class="tab-btn" id="admin-tab-approvals" onclick="switchAdminTab('approvals')">Pending Approvals</button>
+        <button class="tab-btn" id="admin-tab-profile-req" onclick="switchAdminTab('profile-req')">Profile Update Requests</button>
+        <button class="tab-btn" id="admin-tab-tickets" onclick="switchAdminTab('tickets')">Tickets & Support</button>
+      </div>
+
+      <div id="admin-sec-users">
+        <h4 style="font-weight:700; margin-bottom:10px;">Registered Users</h4>
+        <div id="admin-users-list" style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;"></div>
+      </div>
+
+      <div id="admin-sec-approvals" class="hidden">
+        <h4 style="font-weight:700; margin-bottom:10px;">Pending Registration Approvals</h4>
+        <div id="admin-approvals-list" style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;"></div>
+      </div>
+
+      <div id="admin-sec-profile-req" class="hidden">
+        <h4 style="font-weight:700; margin-bottom:10px;">Student Profile Update Requests</h4>
+        <div id="admin-profile-req-list" style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;"></div>
+      </div>
+
+      <div id="admin-sec-tickets" class="hidden">
+        <h4 style="font-weight:700; margin-bottom:10px;">Support Tickets</h4>
+        <div id="admin-tickets-list" style="display:flex; flex-direction:column; gap:10px; max-height:300px; overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User 3-Dot Action Menu Modal -->
+  <div id="modal-user-actions" class="modal-backdrop">
+    <div class="modal-box" style="max-width:380px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 id="ua-modal-title" style="font-weight:700;">User Options</h3>
+        <button class="icon-btn" onclick="closeModal('modal-user-actions')"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="btn btn-outline" onclick="openPasscodeModalForUser()"><span class="material-symbols-outlined">lock</span> View Account Info (Secret Passcode)</button>
+        <button class="btn btn-outline" onclick="downloadUserStatementPDF()"><span class="material-symbols-outlined">description</span> Account Statement (PDF)</button>
+        <button class="btn" id="ua-vice-admin-btn" onclick="toggleViceAdminStatus()"><span class="material-symbols-outlined">verified</span> Make Vice Admin</button>
+        <button class="btn btn-danger" onclick="deleteUserAccountByAdmin()"><span class="material-symbols-outlined">delete</span> Delete Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secret Passcode Modal for Account Info -->
+  <div id="modal-passcode" class="modal-backdrop">
+    <div class="modal-box" style="max-width:360px; text-align:center;">
+      <h3 style="font-weight:700; margin-bottom:6px; color:var(--md-sys-color-primary);">Enter Passcode</h3>
+      <p style="font-size:0.85rem; color:var(--md-sys-color-outline); margin-bottom:16px;">Enter 4-digit secret passcode to unlock account details.</p>
+      
+      <div class="passcode-dots-container">
+        <div class="passcode-box" id="pbox-0">•</div>
+        <div class="passcode-box" id="pbox-1">•</div>
+        <div class="passcode-box" id="pbox-2">•</div>
+        <div class="passcode-box" id="pbox-3">•</div>
+      </div>
+
+      <input type="number" inputmode="numeric" pattern="[0-9]*" id="passcode-hidden-input" maxlength="4" style="position:absolute; opacity:0; width:1px; height:1px;" oninput="handlePasscodeDigitInput(this)">
+
+      <button class="btn" onclick="document.getElementById('passcode-hidden-input').focus()">Enter Passcode</button>
+    </div>
+  </div>
+
+  <!-- User Account Details View Modal -->
+  <div id="modal-account-info-view" class="modal-backdrop">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-weight:700; color:var(--md-sys-color-primary);">Student Account Details</h3>
+        <button class="icon-btn" onclick="closeModal('modal-account-info-view')"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div id="account-info-details-box" style="display:flex; flex-direction:column; gap:10px; font-size:0.95rem;"></div>
+    </div>
+  </div>
+
+  <!-- Admin & Contact Info Modal -->
+  <div id="modal-admin-info" class="modal-backdrop">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-weight:700;">Admin & Staff Contacts</h3>
+        <button class="icon-btn" onclick="closeModal('modal-admin-info')"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div id="admin-info-content" style="display:flex; flex-direction:column; gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Student Report Modal -->
+  <div id="modal-report" class="modal-backdrop">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-weight:700;">Report Issue / Feedback</h3>
+        <button class="icon-btn" onclick="closeModal('modal-report')"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="form-group"><label>Category</label><select id="report-type"><option value="Suggestion">Suggestion</option><option value="Complaint">Complaint</option><option value="Technical Issue">Technical Issue</option></select></div>
+      <div class="form-group"><label>Message</label><textarea id="report-desc" rows="3" placeholder="Describe issue..."></textarea></div>
+      <button class="btn" onclick="submitSupportTicket()">Submit Ticket</button>
+    </div>
+  </div>
+
+  <!-- Manage My Account Modal -->
+  <div id="modal-my-account" class="modal-backdrop">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="font-weight:700;">Manage My Account</h3>
+        <button class="icon-btn" onclick="closeModal('modal-my-account')"><span class="material-symbols-outlined">close</span></button>
+      </div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="acc-name"></div>
+      <div class="form-group"><label>Email (Fixed)</label><input type="email" id="acc-email" readonly style="opacity:0.7;"></div>
+      <div class="form-group"><label>Roll Number (Fixed)</label><input type="text" id="acc-roll" readonly style="opacity:0.7;"></div>
+      <div class="form-group"><label>New Password</label><input type="password" id="acc-password" placeholder="Enter new password"></div>
+      <button class="btn" onclick="submitAccountChangesRequest()">Submit Changes for Approval</button>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCl5j8M85FtGNr-m14hA4k7ebuAXsx3Q_E",
+      authDomain: "online-portcal-fastzone.firebaseapp.com",
+      databaseURL: "https://online-portcal-fastzone-default-rtdb.firebaseio.com",
+      projectId: "online-portcal-fastzone",
+      storageBucket: "online-portcal-fastzone.firebasestorage.app",
+      messagingSenderId: "438910916642",
+      appId: "1:438910916642:web:0ccc5155e0a22a0517127b",
+      measurementId: "G-63Y24228WR"
+    };
+
+    try { if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); } } catch(e){}
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    let currentUser = null;
+    let currentUserData = null;
+    let isAdmin = false;
+    let isViceAdmin = false;
+    let selectedUserForAction = null;
+    let currentReelCategory = 'all';
+    let uploadedAnnouncementImages = [];
+
+    function showLoading(show) {
+      const overlay = document.getElementById('loading-overlay');
+      if (show) overlay.classList.remove('hidden');
+      else overlay.classList.add('hidden');
+    }
+
+    function showM3Popup(title, message) {
+      document.getElementById('m3-popup-title').innerText = title;
+      document.getElementById('m3-popup-message').innerText = message;
+      document.getElementById('m3-custom-popup').classList.add('active');
+    }
+    function closeM3Popup() {
+      document.getElementById('m3-custom-popup').classList.remove('active');
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('fz_theme_color');
+      const savedMode = localStorage.getItem('fz_theme_mode');
+      if (savedTheme || savedMode) {
+        applyThemeToDOM(savedTheme || 'default', savedMode || 'light');
+      }
+
+      detectAndApplyDeviceView();
+      window.addEventListener('resize', detectAndApplyDeviceView);
+    });
+
+    function detectAndApplyDeviceView() {
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+      const body = document.body;
+      const sidebar = document.getElementById('desktop-sidebar');
+      if (!isMobileDevice) {
+        body.classList.remove('mobile-mode');
+        body.classList.add('desktop-mode');
+        if (currentUser) sidebar.classList.remove('hidden');
+      } else {
+        body.classList.remove('desktop-mode');
+        body.classList.add('mobile-mode');
+        sidebar.classList.add('hidden');
+      }
+    }
+
+    function applyThemeToDOM(color, mode) {
+      document.documentElement.removeAttribute('data-theme');
+      if (mode === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else if (color !== 'default') document.documentElement.setAttribute('data-theme', color);
+    }
+
+    function saveAndApplyThemeSettings() {
+      const color = document.getElementById('theme-color-select').value;
+      const mode = document.getElementById('theme-mode-select').value;
+      localStorage.setItem('fz_theme_color', color);
+      localStorage.setItem('fz_theme_mode', mode);
+      applyThemeToDOM(color, mode);
+      closeModal('modal-appearance');
+    }
+
+    function toggleDropdownMenu() { document.getElementById('dropdown-menu').classList.toggle('active'); }
+    function openNotificationsDropdown() { document.getElementById('notifications-dropdown').classList.toggle('active'); markNotificationsAsRead(); }
+
+    document.addEventListener('click', (e) => {
+      if(!e.target.closest('.header-actions') && !e.target.closest('.dropdown-menu')) {
+        document.getElementById('dropdown-menu').classList.remove('active');
+        document.getElementById('notifications-dropdown').classList.remove('active');
+      }
+    });
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    auth.onAuthStateChanged(async (user) => {
+      showLoading(true);
+      currentUser = user;
+      const loggedInMenu = document.getElementById('logged-in-menu-section');
+      const signoutBtn = document.getElementById('menu-signout-btn');
+      const bottomNav = document.getElementById('bottom-nav');
+      const desktopSidebar = document.getElementById('desktop-sidebar');
+      const notifBtn = document.getElementById('header-notif-btn');
+
+      if (user) {
+        loggedInMenu.classList.remove('hidden');
+        signoutBtn.classList.remove('hidden');
+        notifBtn.classList.remove('hidden');
+
+        const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+        if (isMobileDevice) {
+          bottomNav.classList.remove('hidden');
+          desktopSidebar.classList.add('hidden');
+        } else {
+          desktopSidebar.classList.remove('hidden');
+          bottomNav.classList.add('hidden');
+        }
+
+        // Prompt for notification permission on EVERY login if not granted
+        checkAndRequestNotificationPermissionOnLogin();
+
+        if (user.email === "ayaan20652@gmail.com") {
+          isAdmin = true;
+          isViceAdmin = false;
+          currentUserData = { name: "Main Admin", rollNumber: "ADMIN", role: "ADMIN", email: user.email };
+          setupHeaderProfile();
+          document.getElementById('admin-menu-item').classList.remove('hidden');
+          document.getElementById('admin-suggestion-input-box').classList.remove('hidden');
+          document.getElementById('admin-quick-link-edit').classList.remove('hidden');
+          showMainAppViews();
+        } else {
+          isAdmin = false;
+          const snap = await db.ref('students/' + user.uid).once('value');
+          if (snap.exists()) {
+            currentUserData = snap.val();
+            if (currentUserData.isBanned) {
+              showLoading(false);
+              showM3Popup("Access Denied", "Your account is banned by Admin.");
+              auth.signOut();
+              return;
+            }
+            isViceAdmin = currentUserData.role === "VICE ADMIN";
+            setupHeaderProfile();
+            if (isAdmin || isViceAdmin) {
+              document.getElementById('admin-menu-item').classList.remove('hidden');
+              document.getElementById('admin-suggestion-input-box').classList.remove('hidden');
+              document.getElementById('admin-quick-link-edit').classList.remove('hidden');
+            } else {
+              document.getElementById('admin-menu-item').classList.add('hidden');
+              document.getElementById('admin-suggestion-input-box').classList.add('hidden');
+              document.getElementById('admin-quick-link-edit').classList.add('hidden');
+            }
+            showMainAppViews();
+          }
+        }
+        loadCustomQuickLinks();
+        loadAdminWarningBanner();
+        initPersistentNotifications();
+        logUserActivity("Logged into portal");
+        showLoading(false);
+      } else {
+        isAdmin = false;
+        isViceAdmin = false;
+        loggedInMenu.classList.add('hidden');
+        signoutBtn.classList.add('hidden');
+        notifBtn.classList.add('hidden');
+        bottomNav.classList.add('hidden');
+        desktopSidebar.classList.add('hidden');
+        showView('view-auth');
+        showLoading(false);
+      }
+    });
+
+    // Check & request Chrome push notification permission on every login
+    function checkAndRequestNotificationPermissionOnLogin() {
+      if ("Notification" in window) {
+        if (Notification.permission !== "granted") {
+          Notification.requestPermission().then(permission => {
+            if (permission !== "granted") {
+              showM3Popup("Notification Permission Required", "Please allow notifications in Chrome so you can receive alerts in your mobile notification center.");
+            }
+          });
+        }
+      }
+    }
+
+    // Persistent Database Notifications (Read state saved in Firebase, unread state persists across logins until read)
+    function initPersistentNotifications() {
+      if (!currentUser) return;
+      
+      db.ref('userNotifications/' + currentUser.uid).on('value', snap => {
+        let notifs = [];
+        if (snap.exists()) {
+          snap.forEach(c => {
+            notifs.push({ id: c.key, ...c.val() });
+          });
+        }
+        
+        // Sort newest first
+        notifs.sort((a, b) => b.timestamp - a.timestamp);
+        renderPersistentNotificationsList(notifs);
+      });
+
+      // Listen to new announcements/chats to trigger push and DB notifications
+      db.ref('announcements').limitToLast(1).on('child_added', snapshot => {
+        const ann = snapshot.val();
+        if (currentUser && ann.timestamp > (Date.now() - 10000)) {
+          addNotificationToDbAndPush("New Update Posted", ann.title);
+        }
+      });
+    }
+
+    async function addNotificationToDbAndPush(title, message) {
+      if (!currentUser) return;
+      const notifRef = db.ref('userNotifications/' + currentUser.uid).push();
+      await notifRef.set({
+        title,
+        message,
+        read: false,
+        timestamp: Date.now()
+      });
+
+      if ("Notification" in window && Notification.permission === "granted") {
+        try {
+          new Notification(title, {
+            body: message,
+            icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%231A73E8'/><text x='50%' y='65%' font-family='Arial, sans-serif' font-weight='900' font-size='50' fill='%23FFFFFF' text-anchor='middle'>FZ</text></svg>"
+          });
+        } catch(e) {}
+      }
+    }
+
+    function renderPersistentNotificationsList(notifs) {
+      const container = document.getElementById('notifications-list-container');
+      const badge = document.getElementById('notif-badge-count');
+      
+      const unreadCount = notifs.filter(n => !n.read).length;
+      if (unreadCount > 0) {
+        badge.innerText = unreadCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      if (notifs.length === 0) {
+        container.innerHTML = '<div style="padding: 16px; text-align:center; color:var(--md-sys-color-outline); font-size:0.85rem;">No new notifications</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      notifs.forEach(n => {
+        const bgStyle = n.read ? 'background: transparent;' : 'background: var(--md-sys-color-primary-container);';
+        container.innerHTML += `
+          <div style="padding: 12px 16px; border-bottom: 1px solid var(--md-sys-color-surface-variant); font-size: 0.85rem; ${bgStyle}">
+            <div style="font-weight: 700; color: var(--md-sys-color-primary); margin-bottom: 2px;">${n.title}</div>
+            <div>${n.message}</div>
+          </div>
+        `;
+      });
+    }
+
+    async function markNotificationsAsRead() {
+      if (!currentUser) return;
+      const snap = await db.ref('userNotifications/' + currentUser.uid).once('value');
+      if (snap.exists()) {
+        let updates = {};
+        snap.forEach(c => {
+          updates[c.key + '/read'] = true;
+        });
+        await db.ref('userNotifications/' + currentUser.uid).update(updates);
+      }
+    }
+
+    async function clearAllNotifications() {
+      if (!currentUser) return;
+      await db.ref('userNotifications/' + currentUser.uid).remove();
+    }
+
+    async function logUserActivity(activityText) {
+      if (!currentUser) return;
+      await db.ref('userActivities/' + currentUser.uid).push({
+        text: activityText,
+        timestamp: Date.now()
+      });
+    }
+
+    function setupHeaderProfile() {
+      if (!currentUserData) return;
+      document.getElementById('menu-name').innerText = currentUserData.name;
+      document.getElementById('menu-roll-no').innerText = "Roll: " + (currentUserData.rollNumber || 'N/A');
+
+      const roleBadge = document.getElementById('menu-role-badge');
+      if (isAdmin) {
+        roleBadge.innerText = "ADMIN";
+        roleBadge.style.color = "var(--md-sys-color-primary)";
+      } else if (isViceAdmin) {
+        roleBadge.innerText = "VICE ADMIN";
+        roleBadge.style.color = "var(--md-sys-color-success)";
+      } else {
+        roleBadge.innerText = currentUserData.role || "STUDENT";
+        roleBadge.style.color = "var(--md-sys-color-outline)";
+      }
+
+      const avatarImg = document.getElementById('menu-avatar-img');
+      const avatarFallback = document.getElementById('menu-avatar-fallback');
+      if (currentUserData.avatarUrl) {
+        avatarImg.src = currentUserData.avatarUrl;
+        avatarImg.classList.remove('hidden');
+        avatarFallback.classList.add('hidden');
+      } else {
+        avatarFallback.innerText = currentUserData.name.charAt(0).toUpperCase();
+        avatarFallback.classList.remove('hidden');
+        avatarImg.classList.add('hidden');
+      }
+    }
+
+    function showMainAppViews() {
+      document.getElementById('view-auth').classList.add('hidden');
+      switchMainTab('home');
+    }
+
+    function showView(id) {
+      ['view-auth', 'tab-content-home', 'tab-content-updates', 'tab-content-chat', 'tab-content-reels'].forEach(v => {
+        document.getElementById(v).classList.add('hidden');
+      });
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function switchMainTab(tabName) {
+      ['home', 'updates', 'chat', 'reels'].forEach(t => {
+        const navEl = document.getElementById('nav-' + t);
+        if (navEl) navEl.classList.remove('active');
+        const sideEl = document.getElementById('side-' + t);
+        if(sideEl) sideEl.classList.remove('active');
+        document.getElementById('tab-content-' + t).classList.add('hidden');
+      });
+      const activeNav = document.getElementById('nav-' + tabName);
+      if (activeNav) activeNav.classList.add('active');
+      const sideEl = document.getElementById('side-' + tabName);
+      if(sideEl) sideEl.classList.add('active');
+      document.getElementById('tab-content-' + tabName).classList.remove('hidden');
+
+      const fabBtn = document.getElementById('fab-post-btn');
+      if (tabName === 'updates' && (isAdmin || isViceAdmin)) {
+        fabBtn.classList.remove('hidden');
+      } else {
+        fabBtn.classList.add('hidden');
+      }
+
+      if (tabName === 'chat') {
+        document.getElementById('chat-input-bar').classList.remove('hidden');
+        loadCommunityChat();
+      } else {
+        document.getElementById('chat-input-bar').classList.add('hidden');
+      }
+
+      if (tabName === 'home') {
+        loadHomePinnedAnnouncements();
+        loadHomeSuggestions();
+      }
+      if (tabName === 'updates') loadUpdatesWallFeed();
+      if (tabName === 'reels') loadReelsFeed();
+    }
+
+    function switchAuthTab(type) {
+      if (type === 'login') {
+        document.getElementById('form-login').classList.remove('hidden');
+        document.getElementById('form-register').classList.add('hidden');
+        document.getElementById('btn-tab-login').classList.add('active');
+        document.getElementById('btn-tab-reg').classList.remove('active');
+      } else {
+        document.getElementById('form-register').classList.remove('hidden');
+        document.getElementById('form-login').classList.add('hidden');
+        document.getElementById('btn-tab-reg').classList.add('active');
+        document.getElementById('btn-tab-login').classList.remove('active');
+      }
+    }
+
+    async function handleLogin() {
+      const identifier = document.getElementById('login-user').value.trim();
+      const pass = document.getElementById('login-pass').value;
+      if (!identifier || !pass) { showM3Popup("Missing Fields", "Please enter credentials."); return; }
+
+      showLoading(true);
+      try {
+        let email = identifier;
+        if (identifier.toLowerCase() === "ayaan2065" || identifier.toLowerCase() === "ayaan20652" || identifier.toLowerCase() === "ayaan20652@gmail.com") {
+          email = "ayaan20652@gmail.com";
+        } else if (!identifier.includes('@')) {
+          const snap = await db.ref('usernames/' + identifier.toLowerCase()).once('value');
+          if (snap.exists()) email = snap.val();
+          else throw new Error("Username not found.");
+        }
+        await auth.signInWithEmailAndPassword(email, pass);
+      } catch(err) {
+        showLoading(false);
+        showM3Popup("Login Error", err.message);
+      }
+    }
+
+    function openForgotPasswordModal() {
+      document.getElementById('fp-roll').value = '';
+      document.getElementById('fp-dob').value = '';
+      document.getElementById('forgot-step-1').classList.remove('hidden');
+      document.getElementById('forgot-step-2').classList.add('hidden');
+      openModal('modal-forgot-password');
+    }
+
+    let foundStudentUidForPasswordChange = null;
+    async function verifyForgotPasswordData() {
+      const roll = document.getElementById('fp-roll').value.trim();
+      const dob = document.getElementById('fp-dob').value;
+      if (!roll || !dob) { showM3Popup("Error", "Enter Roll Number and Date of Birth."); return; }
+
+      showLoading(true);
+      const snap = await db.ref('students').orderByChild('rollNumber').equalTo(roll).once('value');
+      showLoading(false);
+
+      if (!snap.exists()) { showM3Popup("Not Found", "No student found with this Roll Number."); return; }
+
+      let matchStudent = null;
+      let matchUid = null;
+      snap.forEach(c => {
+        if (c.val().dob === dob) {
+          matchStudent = c.val();
+          matchUid = c.key;
+        }
+      });
+
+      if (!matchStudent) { showM3Popup("Verification Failed", "Date of birth does not match."); return; }
+
+      foundStudentUidForPasswordChange = matchUid;
+      document.getElementById('fp-res-user').innerText = matchStudent.username;
+      document.getElementById('fp-res-pass').innerText = matchStudent.password;
+      document.getElementById('forgot-step-1').classList.add('hidden');
+      document.getElementById('forgot-step-2').classList.remove('hidden');
+    }
+
+    async function saveNewPasswordFromForgot() {
+      const newPass = document.getElementById('fp-new-pass').value.trim();
+      if (!newPass) { showM3Popup("Error", "Enter new password."); return; }
+
+      showLoading(true);
+      await db.ref('students/' + foundStudentUidForPasswordChange).update({ password: newPass });
+      showLoading(false);
+      showM3Popup("Success", "Password updated successfully! You can now log in.");
+      closeModal('modal-forgot-password');
+    }
+
+    async function handleRegister() {
+      const name = document.getElementById('reg-name').value.trim();
+      const studentClass = document.getElementById('reg-class').value.trim();
+      const rollNumber = document.getElementById('reg-roll').value.trim();
+      const dob = document.getElementById('reg-dob').value;
+      const phone = document.getElementById('reg-phone').value.trim();
+      const username = document.getElementById('reg-username').value.trim().toLowerCase();
+      const email = document.getElementById('reg-email').value.trim();
+      const pass = document.getElementById('reg-pass').value;
+      const avatarFile = document.getElementById('reg-avatar-file').files[0];
+
+      if (!name || !username || !email || !pass) { showM3Popup("Error", "Fill all required fields."); return; }
+
+      showLoading(true);
+      try {
+        const approvalSnap = await db.ref('settings/requireRegistrationApproval').once('value');
+        const isApprovalRequired = approvalSnap.val() === true;
+
+        let avatarUrl = "";
+        if (avatarFile) avatarUrl = await fileToBase64(avatarFile);
+
+        if (isApprovalRequired) {
+          await db.ref('pendingRegistrations').push({
+            name, studentClass, rollNumber, dob, phone, username, email, pass, avatarUrl, timestamp: Date.now()
+          });
+          showLoading(false);
+          showM3Popup("Submitted", "Registration submitted! Admin approval is required before you can log in.");
+        } else {
+          const cred = await auth.createUserWithEmailAndPassword(email, pass);
+          await db.ref('students/' + cred.user.uid).set({
+            uid: cred.user.uid, name, studentClass, rollNumber, dob, phone, username, email, password: pass, avatarUrl, role: "STUDENT", isBanned: false
+          });
+          await db.ref('usernames/' + username).set(email);
+          showLoading(false);
+          showM3Popup("Success", "Registration Successful! Please login.");
+          switchAuthTab('login');
+        }
+      } catch(err) {
+        showLoading(false);
+        showM3Popup("Registration Error", err.message);
+      }
+    }
+
+    function handleLogout() { auth.signOut(); }
+
+    function toggleFabAnnouncementModal() {
+      const fabBtn = document.getElementById('fab-post-btn');
+      const modal = document.getElementById('modal-post-announcement');
+      if (modal.classList.contains('active')) {
+        closeModal('modal-post-announcement');
+        fabBtn.classList.remove('active');
+      } else {
+        uploadedAnnouncementImages = [];
+        document.getElementById('screenshots-preview-container').innerHTML = '';
+        document.getElementById('post-desc-editor').innerHTML = '';
+        openModal('modal-post-announcement');
+        fabBtn.classList.add('active');
+      }
+    }
+
+    // Word Style Formatting Functions
+    function formatTextCmd(command) {
+      document.execCommand(command, false, null);
+    }
+    function formatBlockCmd(tag) {
+      document.execCommand('formatBlock', false, '<' + tag + '>');
+    }
+
+    async function handleScreenshotsSelection(inputEl) {
+      if (inputEl.files) {
+        const files = Array.from(inputEl.files).slice(0, 3); // Max 3 screenshots
+        uploadedAnnouncementImages = [];
+        const previewContainer = document.getElementById('screenshots-preview-container');
+        previewContainer.innerHTML = '';
+
+        for (let file of files) {
+          const base64 = await fileToBase64(file);
+          uploadedAnnouncementImages.push(base64);
+          previewContainer.innerHTML += `<img src="${base64}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid var(--md-sys-color-outline);">`;
+        }
+      }
+    }
+
+    async function publishAdminAnnouncement() {
+      const title = document.getElementById('post-title').value.trim();
+      const descHtml = document.getElementById('post-desc-editor').innerHTML.trim();
+      const isPinned = document.getElementById('post-is-pinned').checked;
+      
+      if (!title || !descHtml) { showM3Popup("Error", "Title and Message details are required."); return; }
+
+      showLoading(true);
+      await db.ref('announcements').push({
+        title, desc: descHtml, isPinned, images: uploadedAnnouncementImages, author: isAdmin ? "Admin" : "Vice Admin", timestamp: Date.now()
+      });
+
+      showLoading(false);
+      showM3Popup("Success", "Update / Announcement uploaded successfully!");
+      toggleFabAnnouncementModal();
+      document.getElementById('post-title').value = '';
+      document.getElementById('post-desc-editor').innerHTML = '';
+      document.getElementById('post-files').value = '';
+      document.getElementById('post-is-pinned').checked = false;
+      loadUpdatesWallFeed();
+    }
+
+    function loadHomePinnedAnnouncements() {
+      db.ref('announcements').on('value', snap => {
+        const pinnedContainer = document.getElementById('home-pinned-announcements-list');
+        pinnedContainer.innerHTML = '';
+
+        if (!snap.exists()) {
+          pinnedContainer.innerHTML = '<p style="color:var(--md-sys-color-outline);">No pinned announcements.</p>';
+          return;
+        }
+
+        let hasPinned = false;
+        snap.forEach(c => {
+          const item = c.val();
+          if (item.isPinned) {
+            hasPinned = true;
+            const title = item.title || "Announcement";
+            let imagesHtml = '';
+            if (item.images && item.images.length > 0) {
+              imagesHtml = '<div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">';
+              item.images.forEach(img => {
+                imagesHtml += `<img src="${img}" style="max-width:120px; max-height:120px; object-fit:cover; border-radius:8px;">`;
+              });
+              imagesHtml += '</div>';
+            } else if (item.mediaUrl) {
+              imagesHtml = `<img src="${item.mediaUrl}" style="max-width:100%; border-radius:12px; margin-top:10px;">`;
+            }
+
+            pinnedContainer.innerHTML += `
+              <div class="card" style="border-left:6px solid var(--md-sys-color-primary); background:var(--md-sys-color-primary-container); margin-bottom:12px;">
+                <h4 style="font-weight:700; color:var(--md-sys-color-on-primary-container);">${title}</h4>
+                <div style="font-size:0.9rem; margin-top:6px; color:var(--md-sys-color-on-primary-container);">${item.desc}</div>
+                ${imagesHtml}
+              </div>
+            `;
+          }
+        });
+        if (!hasPinned) {
+          pinnedContainer.innerHTML = '<p style="color:var(--md-sys-color-outline);">No pinned announcements on home.</p>';
+        }
+      });
+    }
+
+    function loadUpdatesWallFeed() {
+      db.ref('announcements').on('value', snap => {
+        const feed = document.getElementById('updates-wall-feed');
+        feed.innerHTML = '';
+        if (!snap.exists()) {
+          feed.innerHTML = '<div class="card"><p style="color:var(--md-sys-color-outline);">No updates uploaded yet.</p></div>';
+          return;
+        }
+        snap.forEach(c => {
+          const item = c.val(); const id = c.key;
+          const title = item.title || "Update";
+          
+          let imagesHtml = '';
+          if (item.images && item.images.length > 0) {
+            imagesHtml = '<div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">';
+            item.images.forEach(img => {
+              imagesHtml += `<img src="${img}" style="max-width:150px; max-height:150px; object-fit:cover; border-radius:8px;">`;
+            });
+            imagesHtml += '</div>';
+          } else if (item.mediaUrl) {
+            imagesHtml = `<img src="${item.mediaUrl}" style="max-width:100%; border-radius:12px; margin-top:10px;">`;
+          }
+
+          feed.innerHTML += `
+            <div class="card" style="position:relative;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="color:var(--md-sys-color-primary);">${title}</strong>
+                <span style="font-size:0.75rem; color:var(--md-sys-color-outline);">By ${item.author || 'Admin'}</span>
+              </div>
+              <div style="font-size:0.925rem; line-height:1.4;">${item.desc}</div>
+              ${imagesHtml}
+              ${(isAdmin || isViceAdmin) ? `<button class="btn btn-sm btn-danger" style="margin-top:12px;" onclick="deleteUpdate('${id}')">Delete Update</button>` : ''}
+            </div>
+          `;
+        });
+      });
+    }
+
+    async function deleteUpdate(id) {
+      if (confirm("Are you sure you want to delete this update?")) {
+        await db.ref('announcements/' + id).remove();
+        showM3Popup("Deleted", "Update removed successfully.");
+      }
+    }
+
+    async function addQuickLink() {
+      const name = document.getElementById('ql-name').value.trim();
+      const url = document.getElementById('ql-url').value.trim();
+      if (!name || !url) return;
+      await db.ref('quickLinks').push({ name, url });
+      document.getElementById('ql-name').value = '';
+      document.getElementById('ql-url').value = '';
+      loadCustomQuickLinks();
+    }
+
+    function loadCustomQuickLinks() {
+      db.ref('quickLinks').on('value', snap => {
+        const container = document.getElementById('quick-links-container');
+        container.innerHTML = `
+          <a href="https://chatgpt.com" target="_blank" class="btn btn-sm" style="background: #FFFFFF; color: #000; font-weight: 600; text-decoration:none;">ChatGPT</a>
+          <a href="https://gemini.google.com" target="_blank" class="btn btn-sm" style="background: #FFFFFF; color: var(--md-sys-color-primary); font-weight: 600; text-decoration:none;">Gemini AI</a>
+        `;
+        if (snap.exists()) {
+          snap.forEach(c => {
+            let l = c.val();
+            let finalHref = l.url;
+            if (!finalHref.startsWith('http://') && !finalHref.startsWith('https://')) {
+              finalHref = 'https://' + finalHref;
+            }
+            container.innerHTML += `<a href="${finalHref}" target="_blank" class="btn btn-sm" style="background: rgba(255,255,255,0.25); color: #FFF; font-weight: 600; text-decoration:none;">${l.name}</a>`;
+          });
+        }
+      });
+    }
+
+    function toggleWarnUserSelect(val) {
+      const group = document.getElementById('warn-user-select-group');
+      if (val === 'specific') {
+        group.classList.remove('hidden');
+        populateWarnUserDropdown();
+      } else {
+        group.classList.add('hidden');
+      }
+    }
+
+    async function populateWarnUserDropdown() {
+      const select = document.getElementById('warn-target-uid');
+      select.innerHTML = '';
+      const snap = await db.ref('students').once('value');
+      if (snap.exists()) {
+        snap.forEach(c => {
+          const u = c.val();
+          select.innerHTML += `<option value="${c.key}">${u.name} (${u.rollNumber || 'N/A'})</option>`;
+        });
+      }
+    }
+
+    async function setAdminWarning() {
+      const title = document.getElementById('warn-title').value.trim();
+      const details = document.getElementById('warn-details').value.trim();
+      const target = document.getElementById('warn-target').value;
+      const targetUid = document.getElementById('warn-target-uid').value;
+
+      if (!title || !details) { showM3Popup("Error", "Enter title and details."); return; }
+
+      await db.ref('adminWarning').set({
+        title, details, target, targetUid: target === 'specific' ? targetUid : '', timestamp: Date.now()
+      });
+      showM3Popup("Success", "Warning banner published!");
+    }
+
+    async function removeAdminWarning() {
+      await db.ref('adminWarning').remove();
+      showM3Popup("Success", "Warning banner removed.");
+    }
+
+    function loadAdminWarningBanner() {
+      db.ref('adminWarning').on('value', snap => {
+        const container = document.getElementById('admin-warning-banner-container');
+        if (snap.exists()) {
+          const w = snap.val();
+          let showForMe = false;
+          if (isAdmin || isViceAdmin) {
+            showForMe = true;
+          } else if (w.target === 'everyone') {
+            showForMe = true;
+          } else if (w.target === 'specific' && currentUser && w.targetUid === currentUser.uid) {
+            showForMe = true;
+          }
+
+          if (showForMe) {
+            container.innerHTML = `
+              <div class="card" style="background: var(--md-sys-color-error); color: #FFF; border: none; margin-bottom: 16px;">
+                <h3 style="font-weight: 700; margin-bottom: 4px; display:flex; align-items:center; gap:6px;">
+                  <span class="material-symbols-outlined">warning</span> ${w.title}
+                </h3>
+                <p style="font-size: 0.95rem; opacity: 0.95;">${w.details}</p>
+              </div>
+            `;
+            showM3Popup("⚠️ Alert: " + w.title, w.details);
+          } else {
+            container.innerHTML = '';
+          }
+        } else {
+          container.innerHTML = '';
+        }
+      });
+    }
+
+    async function postHomeSuggestion() {
+      if (!isAdmin && !isViceAdmin) return;
+      const input = document.getElementById('input-home-suggestion');
+      const text = input.value.trim();
+      if (!text) return;
+      await db.ref('suggestions').push({ author: isAdmin ? "Main Admin" : "Vice Admin", text, timestamp: Date.now() });
+      input.value = '';
+    }
+
+    function loadHomeSuggestions() {
+      db.ref('suggestions').on('value', snap => {
+        const list = document.getElementById('home-suggestions-list');
+        list.innerHTML = '';
+        if (!snap.exists()) { list.innerHTML = '<p style="color:var(--md-sys-color-outline); font-size:0.9rem;">No suggestions yet.</p>'; return; }
+        snap.forEach(c => {
+          const s = c.val();
+          list.innerHTML += `<div style="padding:10px 14px; background:var(--md-sys-color-surface-variant); border-radius:10px; font-size:0.875rem;"><strong>${s.author}:</strong> ${s.text}</div>`;
+        });
+      });
+    }
+
+    async function sendChatMedia(inputEl) {
+      if (inputEl.files && inputEl.files[0]) {
+        const file = inputEl.files[0];
+        const mediaUrl = await fileToBase64(file);
+        const senderName = isAdmin ? "ADMIN" : (isViceAdmin ? "VICE ADMIN" : currentUserData.name);
+        await db.ref('communityChat').push({
+          uid: currentUser.uid, senderName, text: file.name, mediaUrl, isAdmin: isAdmin || isViceAdmin, timestamp: Date.now()
+        });
+        inputEl.value = '';
+        logUserActivity("Uploaded file in chat");
+      }
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById('chat-text-input');
+      const text = input.value.trim();
+      if (!text) return;
+      const senderName = isAdmin ? "ADMIN" : (isViceAdmin ? "VICE ADMIN" : currentUserData.name);
+      await db.ref('communityChat').push({
+        uid: currentUser.uid, senderName, text, mediaUrl: '', isAdmin: isAdmin || isViceAdmin, timestamp: Date.now()
+      });
+      input.value = '';
+      logUserActivity("Sent chat message");
+    }
+
+    function loadCommunityChat() {
+      db.ref('communityChat').on('value', snap => {
+        const container = document.getElementById('chat-messages');
+        container.innerHTML = '';
+        if (!snap.exists()) { container.innerHTML = '<p style="text-align:center; color:var(--md-sys-color-outline); margin-top:20px;">No messages.</p>'; return; }
+        snap.forEach(c => {
+          const msg = c.val(); const msgId = c.key;
+          const isMine = msg.uid === currentUser.uid;
+          const bubbleClass = isMine ? 'my-msg' : 'other-msg';
+          container.innerHTML += `
+            <div class="chat-bubble ${bubbleClass}">
+              <div style="font-size:0.75rem; font-weight:700; opacity:0.8; margin-bottom:2px;">${msg.senderName}</div>
+              ${msg.text ? `<div>${msg.text}</div>` : ''}
+              ${msg.mediaUrl ? `<a href="${msg.mediaUrl}" target="_blank" style="display:block; margin-top:6px; color:inherit; text-decoration:underline; font-size:0.85rem;">📎 View Attached File</a>` : ''}
+              ${(isAdmin || isViceAdmin) ? `<button onclick="deleteChatMessage('${msgId}')" style="position:absolute; top:4px; right:8px; background:none; border:none; color:inherit; font-size:0.7rem; cursor:pointer;" title="Delete message">✕</button>` : ''}
+            </div>
+          `;
+        });
+        container.scrollTop = container.scrollHeight;
+      });
+    }
+
+    async function deleteChatMessage(msgId) {
+      if (isAdmin || isViceAdmin) {
+        await db.ref('communityChat/' + msgId).remove();
+      }
+    }
+
+    function openAddReelModal() { openModal('modal-add-reel'); }
+    async function publishNewReel() {
+      const fileInput = document.getElementById('reel-file');
+      const caption = document.getElementById('reel-caption').value.trim();
+      if (!fileInput.files[0]) { showM3Popup("Error", "Select video/photo."); return; }
+      
+      showLoading(true);
+      const videoUrl = await fileToBase64(fileInput.files[0]);
+      await db.ref('reels').push({
+        authorUid: currentUser.uid, authorName: isAdmin ? "ADMIN" : (isViceAdmin ? "VICE ADMIN" : currentUserData.name), videoUrl, caption, timestamp: Date.now()
+      });
+      showLoading(false);
+      closeModal('modal-add-reel');
+      fileInput.value = '';
+      document.getElementById('reel-caption').value = '';
+      logUserActivity("Posted a new reel");
+    }
+
+    function switchReelCategory(cat) {
+      currentReelCategory = cat;
+      ['all', 'my', 'saved'].forEach(c => document.getElementById('reel-tab-' + c).classList.toggle('active', c === cat));
+      loadReelsFeed();
+    }
+
+    function loadReelsFeed() {
+      db.ref('reels').on('value', async snap => {
+        const feed = document.getElementById('reels-feed-container');
+        feed.innerHTML = '';
+        if (!snap.exists()) { feed.innerHTML = '<div class="card"><p style="color:var(--md-sys-color-outline);">No reels available.</p></div>'; return; }
+        
+        const savedSnap = await db.ref('savedReels/' + currentUser.uid).once('value');
+        const savedIds = savedSnap.exists() ? Object.keys(savedSnap.val()) : [];
+
+        snap.forEach(c => {
+          const r = c.val(); const id = c.key;
+          const isMyReel = r.authorUid === currentUser.uid;
+          const isSaved = savedIds.includes(id);
+          const likesCount = r.likes ? Object.keys(r.likes).length : 0;
+          const isLiked = r.likes && r.likes[currentUser.uid];
+
+          if (
+            (currentReelCategory === 'all') ||
+            (currentReelCategory === 'my' && isMyReel) ||
+            (currentReelCategory === 'saved' && isSaved)
+          ) {
+            feed.innerHTML += `
+              <div class="reel-card">
+                ${r.videoUrl.includes('data:video') ? `<video class="reel-video" src="${r.videoUrl}" controls loop></video>` : `<img src="${r.videoUrl}" style="width:100%; height:100%; object-fit:cover;">`}
+                <div class="reel-overlay">
+                  <div><h4 style="font-weight:700;">@${r.authorName}</h4><p style="font-size:0.875rem; margin-top:2px;">${r.caption}</p></div>
+                  <div class="reel-actions">
+                    <button class="reel-btn ${isLiked ? 'liked' : ''}" onclick="toggleLikeReel('${id}')"><span class="material-symbols-outlined">favorite</span></button>
+                    <span style="font-size:0.75rem; font-weight:700;">${likesCount}</span>
+                    <button class="reel-btn ${isSaved ? 'saved' : ''}" onclick="toggleSaveReel('${id}')"><span class="material-symbols-outlined">bookmark</span></button>
+                    <button class="reel-btn" onclick="shareReel('${id}')"><span class="material-symbols-outlined">share</span></button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+        });
+      });
+    }
+
+    async function toggleLikeReel(reelId) {
+      const ref = db.ref(`reels/${reelId}/likes/${currentUser.uid}`);
+      const snap = await ref.once('value');
+      if (snap.exists()) await ref.remove();
+      else await ref.set(true);
+    }
+
+    async function toggleSaveReel(reelId) {
+      const ref = db.ref(`savedReels/${currentUser.uid}/${reelId}`);
+      const snap = await ref.once('value');
+      if (snap.exists()) { await ref.remove(); showM3Popup("Saved", "Reel removed from Saved!"); }
+      else { await ref.set(true); showM3Popup("Saved", "Reel saved!"); }
+      loadReelsFeed();
+    }
+
+    function shareReel(reelId) {
+      if (navigator.share) {
+        navigator.share({ title: 'FAST ZONE Reel', url: window.location.href });
+      } else {
+        showM3Popup("Share Link", "Link copied: " + window.location.href);
+      }
+    }
+
+    async function submitSupportTicket() {
+      const type = document.getElementById('report-type').value;
+      const desc = document.getElementById('report-desc').value.trim();
+      if (!desc) return;
+      const ticketNo = 'TCK-' + Math.floor(100000 + Math.random() * 900000);
+      await db.ref('supportTickets').push({
+        ticketNo, uid: currentUser.uid, studentName: currentUserData.name, type, desc, status: 'PENDING', adminReason: '', timestamp: Date.now()
+      });
+      document.getElementById('report-desc').value = '';
+      showM3Popup("Success", "Support ticket submitted successfully!");
+      logUserActivity("Submitted support ticket");
+    }
+
+    function openAdminPortalModal() {
+      if (!isAdmin && !isViceAdmin) { showM3Popup("Access Denied", "Admin or Vice Admin only."); return; }
+      openModal('modal-admin-portal');
+      loadAdminUsersList();
+      loadAdminPendingApprovals();
+      loadAdminProfileRequests();
+      loadAdminTicketsList();
+      checkApprovalToggleState();
+    }
+
+    async function checkApprovalToggleState() {
+      const snap = await db.ref('settings/requireRegistrationApproval').once('value');
+      document.getElementById('approval-toggle').checked = snap.val() === true;
+    }
+
+    async function toggleRegistrationApproval(val) {
+      await db.ref('settings/requireRegistrationApproval').set(val);
+    }
+
+    function switchAdminTab(tab) {
+      ['users', 'approvals', 'profile-req', 'tickets'].forEach(t => {
+        document.getElementById('admin-sec-' + t).classList.add('hidden');
+        document.getElementById('admin-tab-' + t).classList.remove('active');
+      });
+      document.getElementById('admin-sec-' + tab).classList.remove('hidden');
+      document.getElementById('admin-tab-' + tab).classList.add('active');
+    }
+
+    function loadAdminUsersList() {
+      db.ref('students').on('value', snap => {
+        const list = document.getElementById('admin-users-list');
+        list.innerHTML = '';
+        if (!snap.exists()) return;
+        snap.forEach(c => {
+          const u = c.val(); const uid = c.key;
+          list.innerHTML += `
+            <div class="card" style="padding:14px; margin-bottom:0; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <strong style="font-size: 1.05rem;">${u.name}</strong>
+                <div style="font-size:0.75rem; color:var(--md-sys-color-outline); margin-top:2px;">Role: ${u.role || 'STUDENT'}</div>
+              </div>
+              <button class="icon-btn" onclick="openUserActionMenu('${uid}', '${u.name}', '${u.role || 'STUDENT'}')" title="3-Dot Options"><span class="material-symbols-outlined">more_vert</span></button>
+            </div>
+          `;
+        });
+      });
+    }
+
+    function openUserActionMenu(uid, name, role) {
+      selectedUserForAction = { uid, name, role };
+      document.getElementById('ua-modal-title').innerText = name + " Options";
+      const viceBtn = document.getElementById('ua-vice-admin-btn');
+      if (role === "VICE ADMIN") {
+        viceBtn.innerHTML = '<span class="material-symbols-outlined">remove_moderator</span> Remove Vice Admin';
+      } else {
+        viceBtn.innerHTML = '<span class="material-symbols-outlined">verified</span> Make Vice Admin';
+      }
+      openModal('modal-user-actions');
+    }
+
+    function openPasscodeModalForUser() {
+      closeModal('modal-user-actions');
+      document.getElementById('passcode-hidden-input').value = '';
+      updatePasscodeDots('');
+      openModal('modal-passcode');
+      setTimeout(() => document.getElementById('passcode-hidden-input').focus(), 150);
+    }
+
+    function handlePasscodeDigitInput(inputEl) {
+      const val = inputEl.value;
+      updatePasscodeDots(val);
+      if (val.length === 4) {
+        if (val === "8080") {
+          closeModal('modal-passcode');
+          showStudentAccountInfoView();
+        } else {
+          showM3Popup("Incorrect Passcode", "The passcode you entered is incorrect.");
+          inputEl.value = '';
+          updatePasscodeDots('');
+        }
+      }
+    }
+
+    function updatePasscodeDots(val) {
+      for (let i = 0; i < 4; i++) {
+        const box = document.getElementById('pbox-' + i);
+        if (i < val.length) {
+          box.innerText = "•";
+          box.style.borderColor = "var(--md-sys-color-primary)";
+          box.style.background = "var(--md-sys-color-primary-container)";
+        } else {
+          box.innerText = "•";
+          box.style.borderColor = "var(--md-sys-color-outline)";
+          box.style.background = "var(--md-sys-color-surface)";
+        }
+      }
+    }
+
+    async function showStudentAccountInfoView() {
+      if (!selectedUserForAction) return;
+      showLoading(true);
+      const snap = await db.ref('students/' + selectedUserForAction.uid).once('value');
+      showLoading(false);
+      if (!snap.exists()) return;
+      const u = snap.val();
+
+      const box = document.getElementById('account-info-details-box');
+      box.innerHTML = `
+        <div style="background:var(--md-sys-color-surface-variant); padding:12px 16px; border-radius:12px;"><strong>Name:</strong> ${u.name}</div>
+        <div style="background:var(--md-sys-color-surface-variant); padding:12px 16px; border-radius:12px;"><strong>Email:</strong> ${u.email}</div>
+        <div style="background:var(--md-sys-color-surface-variant); padding:12px 16px; border-radius:12px;"><strong>Phone Number:</strong> ${u.phone || 'N/A'}</div>
+        <div style="background:var(--md-sys-color-surface-variant); padding:12px 16px; border-radius:12px;"><strong>Date of Birth:</strong> ${u.dob || 'N/A'}</div>
+        <div style="background:var(--md-sys-color-surface-variant); padding:12px 16px; border-radius:12px;"><strong>Roll Number:</strong> ${u.rollNumber || 'N/A'}</div>
+        <div style="background:var(--md-sys-color-surface-variant); padding:12px 16px; border-radius:12px;"><strong>Password:</strong> ${u.password || 'N/A'}</div>
+      `;
+      openModal('modal-account-info-view');
+    }
+
+    async function toggleViceAdminStatus() {
+      if (!selectedUserForAction) return;
+      const { uid, role } = selectedUserForAction;
+      const newRole = role === "VICE ADMIN" ? "STUDENT" : "VICE ADMIN";
+      await db.ref('students/' + uid).update({ role: newRole });
+      showM3Popup("Success", `User role updated to ${newRole}`);
+      closeModal('modal-user-actions');
+      loadAdminUsersList();
+    }
+
+    async function deleteUserAccountByAdmin() {
+      if (!selectedUserForAction) return;
+      const { uid, name } = selectedUserForAction;
+      if (confirm(`Are you sure you want to delete account for ${name}?`)) {
+        await db.ref('students/' + uid).remove();
+        await db.ref('userActivities/' + uid).remove();
+        showM3Popup("Deleted", "Account deleted successfully.");
+        closeModal('modal-user-actions');
+        loadAdminUsersList();
+      }
+    }
+
+    async function downloadUserStatementPDF() {
+      if (!selectedUserForAction) return;
+      const { uid, name } = selectedUserForAction;
+      const snap = await db.ref('userActivities/' + uid).once('value');
+      const studentSnap = await db.ref('students/' + uid).once('value');
+      const studentInfo = studentSnap.val() || {};
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFillColor(26, 115, 232);
+      doc.rect(0, 0, 210, 30, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.text("FAST ZONE", 15, 20);
+
+      doc.setFontSize(12);
+      doc.text("Account Statement & Activity Log", 140, 20);
+
+      doc.setTextColor(31, 31, 31);
+      doc.setFontSize(11);
+      doc.text(`Student Name: ${name}`, 15, 45);
+      doc.text(`Roll Number: ${studentInfo.rollNumber || 'N/A'}`, 15, 52);
+      doc.text(`Email: ${studentInfo.email || 'N/A'}`, 15, 59);
+      doc.text(`Generated Date: ${new Date().toLocaleString()}`, 15, 66);
+
+      doc.line(15, 72, 195, 72);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Activity Logs:", 15, 82);
+
+      doc.setFont("helvetica", "normal");
+      let y = 92;
+      if (snap.exists()) {
+        snap.forEach(c => {
+          const act = c.val();
+          const dateStr = new Date(act.timestamp).toLocaleString();
+          doc.text(`• [${dateStr}] ${act.text}`, 20, y);
+          y += 8;
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+        });
+      } else {
+        doc.text("No recent activity recorded.", 20, y);
+      }
+
+      doc.save(`${name}_Statement.pdf`);
+      closeModal('modal-user-actions');
+    }
+
+    function loadAdminPendingApprovals() {
+      db.ref('pendingRegistrations').on('value', snap => {
+        const list = document.getElementById('admin-approvals-list');
+        list.innerHTML = '';
+        if (!snap.exists()) { list.innerHTML = '<p style="color:var(--md-sys-color-outline);">No pending registrations.</p>'; return; }
+        snap.forEach(c => {
+          const req = c.val(); const reqId = c.key;
+          list.innerHTML += `
+            <div class="card" style="padding:14px; margin-bottom:0;">
+              <div><strong>${req.name}</strong> (${req.email})</div>
+              <p style="font-size:0.85rem; margin-top:4px;">Roll: ${req.rollNumber} | Class: ${req.studentClass}</p>
+              <div style="display:flex; gap:10px; margin-top:10px;">
+                <button class="btn btn-sm" style="background:var(--md-sys-color-success);" onclick="acceptRegistration('${reqId}')">Accept Registration</button>
+                <button class="btn btn-sm btn-danger" onclick="rejectRegistration('${reqId}')">Reject</button>
+              </div>
+            </div>
+          `;
+        });
+      });
+    }
+
+    async function acceptRegistration(reqId) {
+      showLoading(true);
+      const snap = await db.ref('pendingRegistrations/' + reqId).once('value');
+      if (snap.exists()) {
+        const req = snap.val();
+        const cred = await auth.createUserWithEmailAndPassword(req.email, req.pass);
+        await db.ref('students/' + cred.user.uid).set({
+          uid: cred.user.uid, name: req.name, studentClass: req.studentClass, rollNumber: req.rollNumber,
+          dob: req.dob, phone: req.phone, username: req.username, email: req.email, password: req.pass,
+          avatarUrl: req.avatarUrl || '', role: "STUDENT", isBanned: false
+        });
+        await db.ref('usernames/' + req.username).set(req.email);
+        await db.ref('pendingRegistrations/' + reqId).remove();
+        showLoading(false);
+        showM3Popup("Success", "Registration Approved!");
+      }
+    }
+
+    async function rejectRegistration(reqId) {
+      await db.ref('pendingRegistrations/' + reqId).remove();
+      showM3Popup("Rejected", "Registration Rejected.");
+    }
+
+    function loadAdminProfileRequests() {
+      db.ref('profileUpdateRequests').on('value', snap => {
+        const list = document.getElementById('admin-profile-req-list');
+        list.innerHTML = '';
+        if (!snap.exists()) { list.innerHTML = '<p style="color:var(--md-sys-color-outline);">No profile update requests.</p>'; return; }
+        snap.forEach(c => {
+          const r = c.val(); const rId = c.key;
+          list.innerHTML += `
+            <div class="card" style="padding:14px; margin-bottom:0;">
+              <strong>Student: ${r.studentName}</strong>
+              <div style="display:flex; gap:12px; margin-top:8px; font-size:0.875rem;">
+                <div style="flex:1; background:var(--md-sys-color-surface-variant); padding:8px; border-radius:8px;">
+                  <strong>Old Details:</strong><br>Name: ${r.oldName}<br>Password: ${r.oldPassword}
+                </div>
+                <div style="flex:1; background:var(--md-sys-color-primary-container); padding:8px; border-radius:8px; color:var(--md-sys-color-on-primary-container);">
+                  <strong>New Requested Details:</strong><br>Name: ${r.newName}<br>Password: ${r.newPassword}
+                </div>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:12px;">
+                <button class="btn btn-sm" style="background:var(--md-sys-color-success);" onclick="approveProfileRequest('${rId}', '${r.uid}', '${r.newName}', '${r.newPassword}')">Yes (Approve)</button>
+                <button class="btn btn-sm btn-danger" onclick="rejectProfileRequest('${rId}')">No (Reject)</button>
+              </div>
+            </div>
+          `;
+        });
+      });
+    }
+
+    async function approveProfileRequest(reqId, uid, newName, newPassword) {
+      await db.ref('students/' + uid).update({ name: newName, password: newPassword });
+      await db.ref('profileUpdateRequests/' + reqId).remove();
+      showM3Popup("Approved", "Profile changes applied successfully.");
+    }
+
+    async function rejectProfileRequest(reqId) {
+      await db.ref('profileUpdateRequests/' + reqId).remove();
+      showM3Popup("Rejected", "Profile changes rejected.");
+    }
+
+    function loadAdminTicketsList() {
+      db.ref('supportTickets').on('value', snap => {
+        const list = document.getElementById('admin-tickets-list');
+        list.innerHTML = '';
+        if (!snap.exists()) { list.innerHTML = '<p style="color:var(--md-sys-color-outline);">No tickets.</p>'; return; }
+        snap.forEach(c => {
+          const t = c.val(); const tId = c.key;
+          list.innerHTML += `
+            <div class="card" style="padding:14px; margin-bottom:0;">
+              <strong>${t.ticketNo} - ${t.studentName} (${t.type})</strong>
+              <p style="margin:6px 0; font-size:0.9rem;">${t.desc}</p>
+              <p style="font-size:0.8rem; color:var(--md-sys-color-outline);">Status: <strong>${t.status}</strong></p>
+            </div>
+          `;
+        });
+      });
+    }
+
+    function openMyAccountModal() {
+      if (!currentUserData) return;
+      document.getElementById('acc-name').value = currentUserData.name || '';
+      document.getElementById('acc-email').value = currentUserData.email || '';
+      document.getElementById('acc-roll').value = currentUserData.rollNumber || '';
+      document.getElementById('acc-password').value = currentUserData.password || '';
+      openModal('modal-my-account');
+    }
+
+    async function submitAccountChangesRequest() {
+      const newName = document.getElementById('acc-name').value.trim();
+      const newPassword = document.getElementById('acc-password').value.trim();
+      if (!newName || !newPassword) { showM3Popup("Error", "Fill required fields."); return; }
+
+      await db.ref('profileUpdateRequests').push({
+        uid: currentUser.uid,
+        studentName: currentUserData.name,
+        oldName: currentUserData.name,
+        oldPassword: currentUserData.password,
+        newName,
+        newPassword,
+        timestamp: Date.now()
+      });
+
+      closeModal('modal-my-account');
+      showM3Popup("Submitted", "Your changed information sended to admin wait for approval");
+      logUserActivity("Requested profile changes");
+    }
+
+    function openReportModal() { openModal('modal-report'); }
+    function openAppearanceModal() { openModal('modal-appearance'); }
+    function openAdminInfoModal() {
+      const content = document.getElementById('admin-info-content');
+      content.innerHTML = `
+        <div style="background:var(--md-sys-color-surface-variant); padding:12px 16px; border-radius:12px;">
+          <strong>Main Admin:</strong> Ayaan<br>
+          <strong>Email:</strong> ayaan20652@gmail.com<br>
+          <strong>Phone:</strong> +92 300 1234567
+        </div>
+      `;
+      openModal('modal-admin-info');
+    }
+  </script>
+</body>
+</html>
