@@ -1,5 +1,5 @@
 {
-  "name": "FAST ZONE - Student &amp; Admin Portal",
+  "name": "FAST ZONE - Student & Admin Portal",
   "short_name": "FAST ZONE",
   "description": "FAST ZONE Student and Admin Learning Portal",
   "start_url": "./index.html",
@@ -10,10 +10,11 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://ibb.co/23BQCt4f",
+      "src": "https://ibb.co",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }
   ]
 }
+
